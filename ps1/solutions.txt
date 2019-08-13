@@ -1,0 +1,25 @@
+1-1
+  (a)
+    1) O(n log n)
+    2) O(n)
+    3) 1^n
+    4) n^2
+  (b)
+    1) O(1)
+    2) 2^1000000n
+    3) O(n)
+    4) n*sqrt(n)
+  (c)
+    1) n^sqrt(n)
+    2) 2^n
+    3) n^10 x 2^n/2
+    4) 0(n)
+
+algorithm1:
+mid = 5
+(subStartR, SubNumR) = (0, 10)
+(subStartC1, SubNumC1) = (0, 5)
+(subStartC2, subNumC2) = (6, 4)
+
+append[0,0-10,5]
+append[0,6-10,4]

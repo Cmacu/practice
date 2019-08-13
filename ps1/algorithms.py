@@ -5,6 +5,8 @@ import trace
 ################################## Algorithms ##################################
 ################################################################################
 
+# RUNTIME O(n log n)
+
 
 def algorithm1(problem, trace=None):
     # if it's empty, we're done
@@ -17,7 +19,6 @@ def algorithm1(problem, trace=None):
     # information about the two subproblems
     (subStartR, subNumR) = (0, problem.numRow)
     (subStartC1, subNumC1) = (0, mid)
-    # check what is returned from problem.numCol - (mid + 1)
     (subStartC2, subNumC2) = (mid + 1, problem.numCol - (mid + 1))
 
     subproblems = []
@@ -28,6 +29,7 @@ def algorithm1(problem, trace=None):
     divider = crossProduct(range(problem.numRow), [mid])
 
     # find the maximum in the dividing column
+    # RUNTIME: O(y)
     bestLoc = problem.getMaximum(divider, trace)
 
     # see if the maximum value we found on the dividing line has a better
@@ -43,11 +45,14 @@ def algorithm1(problem, trace=None):
 
     # otherwise, figure out which subproblem contains the neighbor, and
     # recurse in that half
+    # RUNTIME: O(x/2)
     sub = problem.getSubproblemContaining(subproblems, neighbor)
     if not trace is None:
         trace.setProblemDimensions(sub)
     result = algorithm1(sub, trace)
     return problem.getLocationInSelf(sub, result)
+
+# RUNTIME (n^2)
 
 
 def algorithm2(problem, location=(0, 0), trace=None):
@@ -65,6 +70,8 @@ def algorithm2(problem, location=(0, 0), trace=None):
     else:
         # there is a better neighbor, so move to the neighbor and recurse
         return algorithm2(problem, nextLocation, trace)
+
+# RUNTIME O(log n)
 
 
 def algorithm3(problem, bestSeen=None, trace=None):
@@ -118,6 +125,8 @@ def algorithm3(problem, bestSeen=None, trace=None):
         trace.setProblemDimensions(sub)
     result = algorithm3(sub, newBest, trace)
     return problem.getLocationInSelf(sub, result)
+
+# RUNTIME (n log n)
 
 
 def algorithm4(problem, bestSeen=None, rowSplit=True, trace=None):
