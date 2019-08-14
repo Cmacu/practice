@@ -3,3 +3,4 @@
 *.jsonp
 .vscode/settings.json
 *.pyc
+*.tar.gz
