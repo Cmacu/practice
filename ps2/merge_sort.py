@@ -59,10 +59,5 @@ def merge(listA, listB):
     return sorted
 
 
-def main():
-    problem = [1, 12, 3, 10, 15, 6, 7, 8, 9]
-    print merge_sort(problem)
-
-
-if __name__ == "__main__":
-    main()
+problem = [1, 12, 3, 10, 15, 6, 7, 8, 9]
+print merge_sort(problem)

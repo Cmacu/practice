@@ -41,13 +41,8 @@ class Heap:
         print self.array
 
 
-def main():
-    problem = [1, 12, 3, 10, 15, 6, 7, 8, 9]
-    heap = Heap(problem)
-    heap.printHeap()
-    sorted = heap.heapsort()
-    print sorted
-
-
-if __name__ == "__main__":
-    main()
+problem = [1, 12, 3, 10, 15, 6, 7, 8, 9]
+heap = Heap(problem)
+heap.printHeap()
+sorted = heap.heapsort()
+print sorted
