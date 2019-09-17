@@ -56,21 +56,21 @@ class Node:
 
         return
 
-    def findmin(self):
-        node = self
-        while node is not None:
-            value = node.value
+    def findmin(self, node=None):
+        if node is None:
+            node = self
+        while node.left is not None:
             node = node.left
 
-        return value
+        return node
 
-    def findmax(self):
-        node = self
-        while node is not None:
-            value = node.value
+    def findmax(self, node=None):
+        if node is None:
+            node = self
+        while node.right is not None:
             node = node.right
 
-        return value
+        return node
 
     def sort(self, node=None, sorted=[]):
         if node is None:
@@ -86,32 +86,78 @@ class Node:
 
         return sorted
 
-    def inorder(self):
+    def successor(self, node=None):
+        if node is None:
+            node = self
+
+        if node.right is not None:
+            return self.findmin(node.right)
+        parent = node.parent
+        while parent is not None and node == parent.right:
+            node = parent
+            parent = node.parent
+
+        return parent
+
+    def predecessor(self, node=None):
+        if node is None:
+            node = self
+
+        if node.left is not None:
+            return self.findmax(node.left)
+        parent = node.parent
+        while node.parent is not None and node == parent.left:
+            node = parent
+            parent = node.parent
+
+        return parent
+
+    def inOrder(self):
         node = self
-        indent = 1
+        result = []
+
+        while node is not None:
+            if node.left is None:
+                result.append(node.value)
+                node = node.right
+            else:
+                # Find the inorder predecessor of current
+                pre = node.left
+                while(pre.right is not None and pre.right != node):
+                    pre = pre.right
+
+                # Make current as right child of its inorder predecessor
+                if(pre.right is None):
+                    pre.right = node
+                    node = node.left
+
+                # Revert the changes made in if part to restore the
+                # original tree i.e., fix the right child of predecessor
+                else:
+                    pre.right = None
+                    result.append(node.value)
+                    node = node.right
+
+        return result
+
+    def inOrder_stack(self):
+        result = []
         stack = []
-        stack.append(node)
+        node = self
 
-        print 'inorder walk: ',
-        while len(stack) > 0:
-            for i in stack:
-                print i,
-            print ':', node
-            left = node.left
-            if left is not None:
-                stack.append(left)
-                node = left
+        while True:
+            if node is not None:
+                stack.append(node)
+                node = node.left
                 continue
-            node = stack.pop()
-            print str(node.value)
-            right = node.right
-            if right is not None:
-                stack.append(right)
-                node = right
-                continue
+            if len(stack):
+                node = stack.pop()
+                result.append(node.value)
+                node = node.right
+            else:
+                break
 
-        for i in stack:
-            print i
+        return result
 
     def traverse(self, node=None, indent=1):
         if node is None:
@@ -144,9 +190,21 @@ for i in problem:
         print str(i) + ' is NOT valid'
 
 bst.traverse()
-print bst.findmin()
-print bst.findmax()
-print bst.findLeftSize(55)
-# NOT WORKING
+# print bst.findLeftSize(55)
+min = bst.findmin()
+for i in problem:
+    print min,
+    min = bst.successor(min)
+print ''
+
+max = bst.findmax()
+for i in problem:
+    print max,
+    max = bst.predecessor(max)
+print ''
+
 print bst.sort()
-bst.inorder()
+print bst.inOrder_stack()
+print bst.inOrder()
+
+print bst.predecessor()
