@@ -1,0 +1,11 @@
+{
+  "name": "algorithms",
+  "version": "1.0.0",
+  "description": "Node.js challanges",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Stasi Vladimirov",
+  "license": "MIT"
+}
