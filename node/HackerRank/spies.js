@@ -5,169 +5,121 @@ function processData(input) {
   }
   spies = randomSwap(spies);
   conflicts = fixConflicts(spies);
-  // printSpies(spies);
+  printSpies(spies);
   console.log(spies.length);
   console.log(spies.join(" "));
 }
 
 function fixConflicts(spies) {
-  let conflicts = [];
-  for (let i = 0; i < 50000; i++) {
-    conflicts = findConflicts(spies);
-    // console.log(conflicts);
+  let conflicts = findConflicts(spies, true);
+  let best = conflicts.length;
+  let bestEver = conflicts.length;
+  let pairs = {};
+  for (let t = 0; t < 5000; t++) {
     if (!conflicts.length) {
       break;
     }
+    let pair = conflicts.join("_");
+    if (pairs.hasOwnProperty(pair)) {
+      pairs[pair]++;
+      for (let p = 0; p < pairs[pair]; p++) {
+        swap(spies, getRandom(spies.length), getRandom(spies.length));
+      }
+      conflicts = findConflicts(spies, true);
+      best = conflicts.length;
+    } else {
+      pairs[pair] = 1;
+    }
+    conflicts = randomSwap(conflicts);
     for (let c = 0; c < conflicts.length; c++) {
-      if (conflicts.length < 5) {
-        swap(spies, conflicts[c], getRandom(spies.length));
-      } else {
-        swap(spies, conflicts[c], conflicts[getRandom(conflicts.length)]);
+      let conflict = conflicts[c];
+      let bestSpy = getRandom(spies.length);
+      let bestLength = conflicts.length;
+      for (let s = 0; s < spies.length; s++) {
+        if (conflict == s || conflict == bestSpy) {
+          continue;
+        }
+        swap(spies, conflict, s);
+        let thisConflicts = findConflicts(spies);
+        if (thisConflicts.length < bestLength) {
+          bestLength = thisConflicts.length;
+          bestSpy = s;
+        }
+        swap(spies, conflict, s);
+      }
+      if (bestLength < bestEver) {
+        bestEver = bestLength;
+        console.log(bestEver);
+      }
+      if (bestLength < best) {
+        best = bestLength;
+        swap(spies, conflict, bestSpy);
+        break;
       }
     }
+    conflicts = findConflicts(spies);
+    // printSpies(spies);
+    // console.log(best, conflicts.length, conflicts);
+    console.log();
   }
+  // console.log(pairs);
   console.log(conflicts);
   return spies;
 }
 
-function checkPath(spies, row, height, value, increase, limit = 3) {
-  // console.log("steps", height, increase);
-  counter = 1;
-  while (+row < spies.length && +row >= 0 && value <= spies.length && value >= 0) {
-    if (value == spies[row]) {
-      counter += 1;
-      // console.log("found", row + 1, value);
-      if (counter == limit) {
-        // console.log("CONFLICT", row + 1, value);
-        return true;
-      }
-    }
-    value += +increase;
-    row += +height;
-  }
-}
-
-function checkDanger(spies, i) {
-  // DOWN
-  if (i + 1 < spies.length && Math.abs(spies[i] - spies[i + 1]) == 1) {
-    return true;
-  }
-  if (i - 1 >= 0 && Math.abs(spies[i] - spies[i - 1]) == 1) {
-    return true;
-  }
-  // for (let row = i + 1; row < i + (spies.length - i) / 2; row++) {
-  for (let row = i + 1; row < spies.length; row++) {
-    // RIGHT
-    let height = row - i;
-    // for (value = spies[i] + 1; value < spies[i] + (spies.length - spies[i]) / 2; value++) {
-    for (let value = +spies[i] + 1; value <= spies.length; value++) {
-      if (checkPath(spies, row, height, value, value - spies[i])) {
-        return true;
-      }
-    }
-    // LEFT;
-    // for (let value = spies[i] - 1; value >= spies[i] / 2; value--) {
-    for (let value = spies[i] - 1; value >= 0; value--) {
-      if (checkPath(spies, row, height, value, value - spies[i])) {
-        return true;
-      }
-    }
-  }
-  // for (let row = i - 1; row >= 0; row--) {
-  //   // RIGHT
-  //   let height = row - i;
-  //   // for (value = spies[i] + 1; value < spies[i] + (spies.length - spies[i]) / 2; value++) {
-  //   for (let value = +spies[i] + 1; value <= spies.length; value++) {
-  //     if (checkPath(spies, row, height, value, value - spies[i])) {
-  //       return true;
-  //     }
-  //   }
-  //   // LEFT;
-  //   // for (let value = spies[i] - 1; value >= spies[i] / 2; value--) {
-  //   for (let value = spies[i] - 1; value >= 0; value--) {
-  //     if (checkPath(spies, row, height, value, value - spies[i])) {
-  //       return true;
-  //     }
-  //   }
-  // }
-  return false;
-}
-
-function findConflicts(spies) {
+function findConflicts(spies, fix = false) {
   let conflicts = [];
   for (let i = 0; i < spies.length; i++) {
-    const isInDanger = checkDanger(spies, i, conflicts);
-    // console.log(i + 1, "is in danger", isInDanger);
-    if (isInDanger) {
-      conflicts.push(i);
+    if (conflicts.find(c => c == i)) {
+      continue;
+    }
+    let inDanger = isInDanger(spies, i);
+    if (inDanger) {
+      if (!fix) {
+        conflicts.push(i);
+        continue;
+      }
+      for (j = 0; j < conflicts.length; j++) {
+        const c = conflicts[j];
+        swap(spies, i, c);
+        if (isInDanger(spies, i) || isInDanger(spies, c)) {
+          swap(spies, i, c);
+        } else {
+          inDanger = false;
+          conflicts = conflicts.filter(t => t != c);
+          break;
+        }
+      }
+      if (inDanger) {
+        conflicts.push(i);
+      }
     }
   }
   return conflicts;
 }
 
-function create(length) {
-  let spies = [];
-  let max = Math.floor(length / 10);
-  for (let i = 1; i <= 10; i++) {
-    let x = 10;
-    j = i;
-    while (j <= length) {
-      spies.push(j);
-      j += x;
-      // x++;
+function isInDanger(spies, i) {
+  let angles = {};
+  for (let j = 0; j < spies.length; j++) {
+    let corner = Math.abs(j - i);
+    if (corner > 0 && corner == Math.abs(spies[j] - spies[i])) {
+      // printSpies(spies);
+      // console.log(i + 1, "is diagonal of ", j + 1);
+      return true;
     }
-  }
-
-  return spies;
-}
-
-function thirdSwap(spies) {
-  let counter = 2;
-  for (let i = 4; i < spies.length; i += counter) {
-    swap(spies, i, i + counter);
-    swap(spies, i + 1, i + 1 + counter);
-    counter += 2;
-  }
-  return spies;
-}
-
-function opositeSwap(spies) {
-  const half = Math.floor(spies.length / 2);
-  for (let i = 1; i <= half; i += 2) {
-    swap(spies, i, half + i);
-  }
-  return spies;
-}
-
-function getPrimes(number) {
-  primes = [2];
-  for (let i = 3; i <= number; i++) {
-    if (!primes.find(prime => i % prime == 0)) {
-      primes.push(i);
+    let angle = Math.atan2(spies[j] - spies[i], j - i);
+    // console.log(angle);
+    if (angles.hasOwnProperty(angle)) {
+      // console.log(i + 1, "is line with ", j + 1, " and ", angles[angle] + 1);
+      return true;
     }
+    angles[angle] = j;
   }
 
-  return primes;
-}
-
-function fibonachi(count) {
-  fib = Array(count);
-  fib[0] = 0;
-  fib[1] = 1;
-  for (i = 2; i <= count; i++) {
-    fib[i] = (fib[i - 1] + fib[i - 2]) % count;
-  }
-  return fib;
+  return false;
 }
 
 function swap(list, a, b) {
-  if (a >= list.length) {
-    a = a - list.length - 1;
-  }
-  if (b >= list.length) {
-    b = b - list.length;
-  }
-  // console.log(a, b);
   const temp = list[a];
   list[a] = list[b];
   list[b] = temp;
@@ -185,55 +137,17 @@ function printSpies(spies) {
   }
 }
 
-function fibonachiSwap(spies) {
-  const fib = fibonachi(spies.length);
-  let fibCount = 3;
-  for (i = 0; i < spies.length; i++) {
-    if (Math.abs(spies[i] - spies[i + 1]) == 1) {
-      swap(spies, i, fib[fibCount]);
-      fibCount++;
-    }
-  }
-  return spies;
-}
-
-function primeSwap(spies) {
-  const primes = getPrimes(spies.length);
-  let primeCount = 0;
-  for (i = 0; i < spies.length; i++) {
-    if (Math.abs(spies[i] - spies[i + 1]) == 1) {
-      swap(spies, i, primes[primeCount]);
-      primeCount++;
-      if (primeCount == primes.length) {
-        primeCount = 0;
-      }
-    }
-  }
-  return spies;
-}
-
 function getRandom(length) {
   return Math.floor(Math.random() * 1000) % length;
 }
 
-function randomSwap(spies) {
-  let loops = 0;
-  let lastSwapped = 0;
-  let i = 1;
-  while (lastSwapped != i) {
-    // for (let i = 1; i < input - 1; i++) {
-    if (Math.abs(spies[i] - spies[i + 1]) == 1) {
-      swap(spies, i, getRandom(spies.length));
-      lastSwapped = i;
-    }
-    i++;
-    if (i == spies.length) {
-      i = 0;
-      loops++;
+function randomSwap(list) {
+  for (let r = 0; r < 10; r++) {
+    for (let i = 0; i < list.length; i++) {
+      swap(list, i, getRandom(list.length));
     }
   }
-  console.log(loops);
-  return spies;
+  return list;
 }
 
 Number.prototype.pad = function(size) {
@@ -250,7 +164,7 @@ Number.prototype.pad = function(size) {
 // result = "2 4 7 1 8 11 5 3 9 6 10";
 // result = "2 4 1 5 3";
 // result = "9 7 2 4 15 12 1 5 17 6 13 10 8 11 16 3 14";
-// result = "2 4 7 1 8 11 5 3 9 6 10";
+// result = "15 18 12 21 8 4 2 10 22 20 1 9 6 13 19 16 11 23 5 3 17 7 14";
 // spies = result.split(" ");
 // printSpies(spies);
 // console.log("conflicts", findConflicts(spies));
@@ -258,4 +172,4 @@ Number.prototype.pad = function(size) {
 // console.log(spies.join(" "));
 // return;
 
-processData(111);
+processData(99);
